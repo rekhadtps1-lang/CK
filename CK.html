@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CK — Personal &amp; Family Document Vault</title>
+    <!-- Google Fonts: Poppins & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Poppins:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* =========================================================
+           BASE & GLOBAL SETUP
+           ========================================================= */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            font-family: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #05050d;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* =========================================================
+           SMOOTH PAGE TRANSITIONS
+           ========================================================= */
+        .app-page {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.97);
+            transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 1;
+        }
+        .app-page.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            z-index: 10;
+        }
+        .app-page.exit-zoom {
+            opacity: 0;
+            transform: scale(1.05);
+            pointer-events: none;
+        }
+
+        /* =========================================================
+           NATIVE LABEL + STRETCHED FILE INPUT (MOBILE CHROME SAFE)
+           ========================================================= */
+        .native-file-btn {
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .native-file-input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 100px;
+        }
+
+        /* =========================================================
+           CK GLOWING BRAND EMBLEM
+           ========================================================= */
+        .ck-logo-badge {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.25));
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            box-shadow: 0 0 22px rgba(6, 182, 212, 0.35), inset 0 0 12px rgba(139, 92, 246, 0.28);
+        }
+        .ck-text-glow {
+            background: linear-gradient(135deg, #22d3ee 0%, #a855f7 52%, #ec4899 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.45));
+        }
+
+        /* =========================================================
+           PAGE 1: 10-SECOND PREMIUM OPENING ANIMATION
+           ========================================================= */
+        #page-splash {
+            background: radial-gradient(circle at center, #0e1330 0%, #050510 68%, #020206 100%);
+            overflow: hidden;
+        }
+        #splash-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 1;
+        }
+        .holo-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .holo-ring-1 {
+            width: min(76vw, 315px);
+            height: min(76vw, 315px);
+            border: 2.5px solid transparent;
+            border-top-color: rgba(34, 211, 238, 0.9);
+            border-right-color: rgba(168, 85, 247, 0.85);
+            box-shadow: 0 0 36px rgba(34, 211, 238, 0.3), inset 0 0 26px rgba(168, 85, 247, 0.25);
+            animation: spinCW 4.6s linear infinite, hueCycle 10s linear infinite;
+        }
+        .holo-ring-2 {
+            width: min(88vw, 372px);
+            height: min(88vw, 372px);
+            border: 1.5px dashed rgba(236, 72, 153, 0.6);
+            animation: spinCCW 9s linear infinite;
+        }
+        .holo-ring-3 {
+            width: min(62vw, 256px);
+            height: min(62vw, 256px);
+            border: 1.5px solid transparent;
+            border-bottom-color: rgba(16, 185, 129, 0.9);
+            border-left-color: rgba(250, 204, 21, 0.85);
+            animation: spinCCW 3.2s linear infinite;
+        }
+        @keyframes spinCW {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes spinCCW {
+            from { transform: translate(-50%, -50%) rotate(360deg); }
+            to { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+        @keyframes hueCycle {
+            0%   { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        .progress-shimmer {
+            background: linear-gradient(90deg, #00f5ff, #a855f7, #ec4899, #10b981, #facc15);
+            background-size: 300% 100%;
+            animation: shimmerFlow 2.1s linear infinite;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.7);
+        }
+        @keyframes shimmerFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+
+        /* =========================================================
+           COSMIC ANIMATED MESH BACKGROUNDS (PAGES 2 & 3)
+           ========================================================= */
+        #page-people {
+            background: #060815;
+        }
+        #page-documents {
+            background: linear-gradient(135deg, #050f1d 0%, #0b0e28 50%, #19092b 100%);
+        }
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .mesh-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(88px);
+            animation: floatOrb 15s ease-in-out infinite alternate;
+        }
+        .mesh-orb-a {
+            width: 66vw; height: 66vw; max-width: 520px; max-height: 520px;
+            top: -16%; left: -12%;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.52) 0%, rgba(37, 99, 235, 0.35) 60%, transparent 100%);
+        }
+        .mesh-orb-b {
+            width: 62vw; height: 62vw; max-width: 490px; max-height: 490px;
+            bottom: -18%; right: -10%;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.45) 0%, rgba(139, 92, 246, 0.35) 60%, transparent 100%);
+            animation-delay: -5s;
+        }
+        .mesh-orb-c {
+            width: 50vw; height: 50vw; max-width: 400px; max-height: 400px;
+            top: 42%; left: 52%;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.38) 0%, rgba(16, 185, 129, 0.22) 65%, transparent 100%);
+            animation-delay: -9s;
+        }
+        @keyframes floatOrb {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(26px, -20px) scale(1.08); }
+            100% { transform: translate(-20px, 24px) scale(0.95); }
+        }
+
+        /* =========================================================
+           GLASSMORPHISM CARDS & BUTTONS
+           ========================================================= */
+        .glass-card {
+            background: rgba(14, 19, 39, 0.72);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+        .interactive-card {
+            background: rgba(15, 21, 44, 0.68);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .interactive-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(34, 211, 238, 0.48);
+            box-shadow: 0 18px 40px rgba(6, 182, 212, 0.2);
+        }
+        .btn-glow {
+            background: linear-gradient(135deg, #06b6d4 0%, #6366f1 50%, #ec4899 100%);
+            background-size: 200% 200%;
+            transition: all 0.28s ease;
+            box-shadow: 0 10px 26px rgba(99, 102, 241, 0.42);
+        }
+        .btn-glow:hover {
+            background-position: right center;
+            box-shadow: 0 14px 32px rgba(236, 72, 153, 0.48);
+            transform: translateY(-1px);
+        }
+        .btn-glow:active {
+            transform: scale(0.98);
+        }
+        .btn-download-glow {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.38);
+            transition: all 0.25s ease;
+        }
+        .btn-download-glow:hover {
+            box-shadow: 0 8px 26px rgba(6, 182, 212, 0.5);
+            transform: translateY(-1px);
+        }
+        .btn-download-glow:active {
+            transform: scale(0.97);
+        }
+
+        /* Search Bar Sticky Blur */
+        .search-sticky {
+            background: rgba(10, 15, 34, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Viewer Zoom */
+        .viewer-img {
+            transition: transform 0.3s ease;
+            cursor: zoom-in;
+        }
+        .viewer-img.zoomed {
+            transform: scale(1.8);
+            cursor: zoom-out;
+        }
+
+        /* Toast Enter */
+        .toast-enter {
+            transform: translate(-50%, 0) !important;
+            opacity: 1 !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.03); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 999px; }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Poppins, Inter, system-ui, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.right-4{right:1rem}.top-4{top:1rem}.top-3{top:0.75rem}.bottom-6{bottom:1.5rem}.left-1\/2{left:50%}.right-3{right:0.75rem}.z-10{z-index:10}.z-20{z-index:20}.z-30{z-index:30}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-6{margin-top:1.5rem;margin-bottom:1.5rem}.my-auto{margin-top:auto;margin-bottom:auto}.mb-1\.5{margin-bottom:0.375rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.mt-1{margin-top:0.25rem}.mt-4{margin-top:1rem}.mb-1{margin-bottom:0.25rem}.mb-2\.5{margin-bottom:0.625rem}.mb-3{margin-bottom:0.75rem}.mb-3\.5{margin-bottom:0.875rem}.mb-8{margin-bottom:2rem}.mt-1\.5{margin-top:0.375rem}.mt-2{margin-top:0.5rem}.block{display:block}.inline-block{display:inline-block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.aspect-\[4\/3\]{aspect-ratio:4/3}.h-10{height:2.5rem}.h-2{height:0.5rem}.h-2\.5{height:0.625rem}.h-24{height:6rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-full{height:100%}.h-11{height:2.75rem}.h-14{height:3.5rem}.h-20{height:5rem}.h-28{height:7rem}.h-7{height:1.75rem}.h-9{height:2.25rem}.h-12{height:3rem}.h-36{height:9rem}.h-40{height:10rem}.h-6{height:1.5rem}.h-8{height:2rem}.h-\[58vh\]{height:58vh}.max-h-full{max-height:100%}.min-h-\[calc\(100vh-76px\)\]{min-height:calc(100vh - 76px)}.w-0{width:0px}.w-10{width:2.5rem}.w-2{width:0.5rem}.w-24{width:6rem}.w-4{width:1rem}.w-full{width:100%}.w-11{width:2.75rem}.w-14{width:3.5rem}.w-20{width:5rem}.w-28{width:7rem}.w-5{width:1.25rem}.w-7{width:1.75rem}.w-9{width:2.25rem}.w-12{width:3rem}.w-2\.5{width:0.625rem}.w-6{width:1.5rem}.w-8{width:2rem}.min-w-0{min-width:0px}.max-w-5xl{max-width:64rem}.max-w-\[270px\]{max-width:270px}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.max-w-4xl{max-width:56rem}.max-w-3xl{max-width:48rem}.max-w-\[92vw\]{max-width:92vw}.max-w-full{max-width:100%}.max-w-xs{max-width:20rem}.shrink-0{flex-shrink:0}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-y-12{--tw-translate-y:3rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}@keyframes spin{to{transform:rotate(360deg)}}.animate-spin{animation:spin 1s linear infinite}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.items-baseline{align-items:baseline}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-1\.5{gap:0.375rem}.gap-4{gap:1rem}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.self-start{align-self:flex-start}.overflow-auto{overflow:auto}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.whitespace-nowrap{white-space:nowrap}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-dashed{border-style:dashed}.border-cyan-400\/30{border-color:rgb(34 211 238 / 0.3)}.border-white\/15{border-color:rgb(255 255 255 / 0.15)}.border-white\/20{border-color:rgb(255 255 255 / 0.2)}.border-amber-400\/30{border-color:rgb(251 191 36 / 0.3)}.border-cyan-400\/35{border-color:rgb(34 211 238 / 0.35)}.border-fuchsia-400\/35{border-color:rgb(232 121 249 / 0.35)}.border-rose-400\/35{border-color:rgb(251 113 133 / 0.35)}.border-white\/10{border-color:rgb(255 255 255 / 0.1)}.border-amber-400\/35{border-color:rgb(251 191 36 / 0.35)}.border-amber-400\/40{border-color:rgb(251 191 36 / 0.4)}.border-cyan-400{--tw-border-opacity:1;border-color:rgb(34 211 238 / var(--tw-border-opacity, 1))}.border-emerald-400\/35{border-color:rgb(52 211 153 / 0.35)}.border-emerald-400\/40{border-color:rgb(52 211 153 / 0.4)}.border-indigo-400\/35{border-color:rgb(129 140 248 / 0.35)}.border-t-transparent{border-top-color:transparent}.bg-cyan-500\/15{background-color:rgb(6 182 212 / 0.15)}.bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-slate-900\/80{background-color:rgb(15 23 42 / 0.8)}.bg-white\/10{background-color:rgb(255 255 255 / 0.1)}.bg-amber-500\/15{background-color:rgb(245 158 11 / 0.15)}.bg-black\/85{background-color:rgb(0 0 0 / 0.85)}.bg-fuchsia-500\/15{background-color:rgb(217 70 239 / 0.15)}.bg-rose-500\/15{background-color:rgb(244 63 94 / 0.15)}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-950{--tw-bg-opacity:1;background-color:rgb(2 6 23 / var(--tw-bg-opacity, 1))}.bg-transparent{background-color:transparent}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.bg-black\/65{background-color:rgb(0 0 0 / 0.65)}.bg-black\/80{background-color:rgb(0 0 0 / 0.8)}.bg-black\/90{background-color:rgb(0 0 0 / 0.9)}.bg-cyan-500\/20{background-color:rgb(6 182 212 / 0.2)}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-indigo-500\/20{background-color:rgb(99 102 241 / 0.2)}.bg-indigo-500\/25{background-color:rgb(99 102 241 / 0.25)}.bg-rose-500{--tw-bg-opacity:1;background-color:rgb(244 63 94 / var(--tw-bg-opacity, 1))}.bg-rose-500\/20{background-color:rgb(244 63 94 / 0.2)}.bg-slate-900\/65{background-color:rgb(15 23 42 / 0.65)}.bg-slate-900\/95{background-color:rgb(15 23 42 / 0.95)}.bg-slate-950\/75{background-color:rgb(2 6 23 / 0.75)}.bg-slate-950\/90{background-color:rgb(2 6 23 / 0.9)}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.bg-gradient-to-tr{background-image:linear-gradient(to top right, var(--tw-gradient-stops))}.from-cyan-300{--tw-gradient-from:#67e8f9 var(--tw-gradient-from-position);--tw-gradient-to:rgb(103 232 249 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-cyan-400{--tw-gradient-from:#22d3ee var(--tw-gradient-from-position);--tw-gradient-to:rgb(34 211 238 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-cyan-500\/20{--tw-gradient-from:rgb(6 182 212 / 0.2) var(--tw-gradient-from-position);--tw-gradient-to:rgb(6 182 212 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-fuchsia-300{--tw-gradient-to:rgb(240 171 252 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #f0abfc var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-violet-500{--tw-gradient-to:rgb(139 92 246 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #8b5cf6 var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-violet-500\/25{--tw-gradient-to:rgb(139 92 246 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), rgb(139 92 246 / 0.25) var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-amber-300{--tw-gradient-to:#fcd34d var(--tw-gradient-to-position)}.to-pink-500{--tw-gradient-to:#ec4899 var(--tw-gradient-to-position)}.to-pink-500\/20{--tw-gradient-to:rgb(236 72 153 / 0.2) var(--tw-gradient-to-position)}.bg-clip-text{-webkit-background-clip:text;background-clip:text}.object-contain{object-fit:contain}.object-cover{object-fit:cover}.p-4{padding:1rem}.p-6{padding:1.5rem}.p-\[2px\]{padding:2px}.p-1{padding:0.25rem}.p-5{padding:1.25rem}.p-8{padding:2rem}.p-2{padding:0.5rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-8{padding-top:2rem;padding-bottom:2rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-7{padding-left:1.75rem;padding-right:1.75rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-4{padding-top:1rem;padding-bottom:1rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.pt-4{padding-top:1rem}.pb-24{padding-bottom:6rem}.pr-2{padding-right:0.5rem}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-5xl{font-size:3rem;line-height:1}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-base{font-size:1rem;line-height:1.5rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-tight{line-height:1.25}.leading-relaxed{line-height:1.625}.tracking-tight{letter-spacing:-0.025em}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.tracking-widest{letter-spacing:0.1em}.text-cyan-100\/90{color:rgb(207 250 254 / 0.9)}.text-cyan-200{--tw-text-opacity:1;color:rgb(165 243 252 / var(--tw-text-opacity, 1))}.text-cyan-300{--tw-text-opacity:1;color:rgb(103 232 249 / var(--tw-text-opacity, 1))}.text-cyan-300\/90{color:rgb(103 232 249 / 0.9)}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-transparent{color:transparent}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-fuchsia-200{--tw-text-opacity:1;color:rgb(245 208 254 / var(--tw-text-opacity, 1))}.text-rose-200{--tw-text-opacity:1;color:rgb(254 205 211 / var(--tw-text-opacity, 1))}.text-amber-200{--tw-text-opacity:1;color:rgb(253 230 138 / var(--tw-text-opacity, 1))}.text-cyan-100{--tw-text-opacity:1;color:rgb(207 250 254 / var(--tw-text-opacity, 1))}.text-emerald-100{--tw-text-opacity:1;color:rgb(209 250 229 / var(--tw-text-opacity, 1))}.text-emerald-200{--tw-text-opacity:1;color:rgb(167 243 208 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-indigo-100{--tw-text-opacity:1;color:rgb(224 231 255 / var(--tw-text-opacity, 1))}.text-indigo-200{--tw-text-opacity:1;color:rgb(199 210 254 / var(--tw-text-opacity, 1))}.text-indigo-300{--tw-text-opacity:1;color:rgb(165 180 252 / var(--tw-text-opacity, 1))}.text-rose-400{--tw-text-opacity:1;color:rgb(251 113 133 / var(--tw-text-opacity, 1))}.placeholder-slate-400::placeholder{--tw-placeholder-opacity:1;color:rgb(148 163 184 / var(--tw-placeholder-opacity, 1))}.opacity-0{opacity:0}.opacity-60{opacity:0.6}.shadow-\[0_0_26px_rgba\(139\2c 92\2c 246\2c 0\.42\)\]{--tw-shadow:0 0 26px rgba(139,92,246,0.42);--tw-shadow-colored:0 0 26px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-\[0_0_30px_rgba\(6\2c 182\2c 212\2c 0\.22\)\]{--tw-shadow:0 0 30px rgba(6,182,212,0.22);--tw-shadow-colored:0 0 30px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-\[0_12px_35px_rgba\(0\2c 0\2c 0\2c 0\.55\)\]{--tw-shadow:0 12px 35px rgba(0,0,0,0.55);--tw-shadow-colored:0 12px 35px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.drop-shadow-\[0_0_22px_rgba\(34\2c 211\2c 238\2c 0\.45\)\]{--tw-drop-shadow:drop-shadow(0 0 22px rgba(34,211,238,0.45));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.duration-500{transition-duration:500ms}.hover\:border-cyan-400\/40:hover{border-color:rgb(34 211 238 / 0.4)}.hover\:bg-white\/20:hover{background-color:rgb(255 255 255 / 0.2)}.hover\:bg-cyan-500\/25:hover{background-color:rgb(6 182 212 / 0.25)}.hover\:bg-fuchsia-500\/25:hover{background-color:rgb(217 70 239 / 0.25)}.hover\:bg-amber-500\/30:hover{background-color:rgb(245 158 11 / 0.3)}.hover\:bg-black\/85:hover{background-color:rgb(0 0 0 / 0.85)}.hover\:bg-cyan-500\/20:hover{background-color:rgb(6 182 212 / 0.2)}.hover\:bg-cyan-500\/30:hover{background-color:rgb(6 182 212 / 0.3)}.hover\:bg-emerald-500\/30:hover{background-color:rgb(16 185 129 / 0.3)}.hover\:bg-indigo-500\/30:hover{background-color:rgb(99 102 241 / 0.3)}.hover\:bg-indigo-500\/35:hover{background-color:rgb(99 102 241 / 0.35)}.hover\:bg-rose-600:hover{--tw-bg-opacity:1;background-color:rgb(225 29 72 / var(--tw-bg-opacity, 1))}.focus\:border-cyan-400:focus{--tw-border-opacity:1;border-color:rgb(34 211 238 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-cyan-400\/30:focus{--tw-ring-color:rgb(34 211 238 / 0.3)}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.active\:scale-90:active{--tw-scale-x:.9;--tw-scale-y:.9;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:inline{display:inline}.sm\:h-12{height:3rem}.sm\:h-\[64vh\]{height:64vh}.sm\:w-12{width:3rem}.sm\:max-w-sm{max-width:24rem}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:gap-5{gap:1.25rem}.sm\:p-6{padding:1.5rem}.sm\:p-8{padding:2rem}.sm\:p-12{padding:3rem}.sm\:p-5{padding:1.25rem}.sm\:p-7{padding:1.75rem}.sm\:px-4{padding-left:1rem;padding-right:1rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:py-6{padding-top:1.5rem;padding-bottom:1.5rem}.sm\:pt-5{padding-top:1.25rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-6xl{font-size:3.75rem;line-height:1}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-4xl{font-size:2.25rem;line-height:2.5rem}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-xs{font-size:0.75rem;line-height:1rem}}@media (min-width: 1024px){.lg\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}}</style></head>
+<body>
+
+    <!-- =========================================================
+         PAGE 1: 10-SECOND PREMIUM OPENING ANIMATION (CK)
+         ========================================================= -->
+    <section id="page-splash" class="app-page flex items-center justify-center active">
+        <canvas id="splash-canvas" width="720" height="1355"></canvas>
+
+        <!-- Subtle Skip Button (Appears after 2 seconds) -->
+        <button id="btn-skip-splash" type="button" class="fixed top-4 right-4 z-20 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md text-xs font-semibold tracking-wider uppercase text-cyan-200 transition-all duration-500 active:scale-95 opacity-0 pointer-events-none">
+            Skip →
+        </button>
+
+        <!-- Rotating Holographic Energy Rings -->
+        <div class="holo-ring holo-ring-1"></div>
+        <div class="holo-ring holo-ring-2"></div>
+        <div class="holo-ring holo-ring-3"></div>
+
+        <!-- Central Glowing CK Emblem & Boot Progress -->
+        <div class="relative z-10 flex flex-col items-center justify-center px-6 text-center w-full max-w-sm pointer-events-none">
+            <!-- CK Monogram Emblem -->
+            <div class="mb-5 relative flex items-center justify-center">
+                <div class="w-24 h-24 rounded-3xl ck-logo-badge backdrop-blur-md flex items-center justify-center">
+                    <span class="text-4xl font-black tracking-tight ck-text-glow">CK</span>
+                </div>
+            </div>
+
+            <!-- Live Percentage Counter -->
+            <div class="flex items-baseline justify-center gap-1 mb-2">
+                <span id="splash-percent" class="text-5xl sm:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 drop-shadow-[0_0_22px_rgba(34,211,238,0.45)]">0</span>
+                <span class="text-xl font-bold text-cyan-300">%</span>
+            </div>
+
+            <!-- Rotating Status Message -->
+            <p id="splash-status" class="text-xs sm:text-sm font-semibold tracking-widest uppercase text-cyan-100/90 h-5 mb-5 transition-opacity duration-300">Initializing CK Vault...</p>
+
+            <!-- Shimmering Progress Bar -->
+            <div class="w-full max-w-[270px] h-2.5 bg-white/10 rounded-full overflow-hidden border border-white/15 p-[2px] backdrop-blur-sm">
+                <div id="splash-bar" class="h-full w-0 rounded-full progress-shimmer" style="width: 0%;"></div>
+            </div>
+
+            <div class="mt-4 flex items-center gap-2 text-[11px] text-slate-400 tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>CK SYSTEM UPDATE • TAP ANYWHERE FOR SPARKS</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         PAGE 2: PROFILES & FAMILY VAULT (CENTERED LAYOUT)
+         ========================================================= -->
+    <section id="page-people" class="app-page">
+        <div class="bg-mesh">
+            <div class="mesh-orb mesh-orb-a"></div>
+            <div class="mesh-orb mesh-orb-b"></div>
+            <div class="mesh-orb mesh-orb-c"></div>
+        </div>
+
+        <!-- Top Header Bar: CK Logo (Left) + Download CK App (Right) -->
+        <header class="relative z-20 w-full max-w-5xl mx-auto px-4 pt-4 sm:pt-5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-2xl ck-logo-badge flex items-center justify-center">
+                    <span class="text-lg font-black tracking-tight ck-text-glow">CK</span>
+                </div>
+                <div>
+                    <span class="block text-sm sm:text-base font-extrabold tracking-wide text-white leading-tight">CK Vault</span>
+                    <span class="block text-[10px] font-medium text-cyan-300/90 tracking-widest uppercase">Personal &amp; Family</span>
+                </div>
+            </div>
+
+            <button id="btn-download-app" type="button" class="btn-download-glow px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-white inline-flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                <span>Download CK App</span>
+            </button>
+        </header>
+
+        <!-- Perfectly Centered Main Content -->
+        <main class="relative z-10 min-h-[calc(100vh-76px)] w-full flex flex-col items-center justify-center p-4 sm:p-6 py-8">
+
+            <!-- STATE A: FIRST-TIME CREATE PROFILE CARD (When 0 profiles exist) -->
+            <div id="first-profile-container" class="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 flex flex-col items-center">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3.5 py-1 rounded-full text-[11px] font-semibold tracking-widest uppercase bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 mb-2">
+                        Welcome to CK
+                    </span>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                        Create Your Profile
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-300 mt-1">
+                        Save your profile to start storing your family documents securely
+                    </p>
+                </div>
+
+                <!-- Enter Your Name -->
+                <div class="w-full mb-4">
+                    <label for="init-name" class="block text-sm font-medium text-slate-200 mb-1.5">Enter Your Name</label>
+                    <input id="init-name" type="text" maxlength="40" placeholder="e.g. Ishan, Papa, Mummy" class="w-full px-4 py-3 rounded-2xl bg-slate-900/80 border border-white/15 text-white placeholder-slate-400 text-sm sm:text-base focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all">
+                </div>
+
+                <!-- Enter Your Phone Number (Strictly 10 digits) -->
+                <div class="w-full mb-5">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="init-phone" class="text-sm font-medium text-slate-200">Enter Your Phone Number</label>
+                        <span id="init-phone-counter" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10 text-slate-300">0/10</span>
+                    </div>
+                    <input id="init-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" class="w-full px-4 py-3 rounded-2xl bg-slate-900/80 border border-white/15 text-white placeholder-slate-400 text-sm sm:text-base tracking-widest font-medium focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all">
+                </div>
+
+                <!-- Enter Your Photo -->
+                <div class="w-full mb-5 flex flex-col items-center">
+                    <span class="text-sm font-medium text-slate-200 self-start mb-3">Enter Your Photo</span>
+
+                    <div class="mb-4">
+                        <div class="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_26px_rgba(139,92,246,0.42)]">
+                            <div class="w-full h-full rounded-full bg-slate-900 overflow-hidden flex items-center justify-center">
+                                <img id="init-photo-preview" src="" alt="Profile" class="w-full h-full object-cover hidden">
+                                <div id="init-photo-placeholder" class="flex flex-col items-center text-slate-400">
+                                    <svg class="w-9 h-9 mb-1" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path>
+                                    </svg>
+                                    <span class="text-[10px] uppercase tracking-wider">No Photo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 w-full">
+                        <!-- Camera Button -->
+                        <button id="btn-init-camera" type="button" class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-sm font-medium text-cyan-200 transition-all active:scale-95">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span>Camera</span>
+                        </button>
+
+                        <!-- Native Gallery Label -->
+                        <label class="native-file-btn gap-2 py-2.5 px-4 rounded-2xl bg-fuchsia-500/15 hover:bg-fuchsia-500/25 border border-fuchsia-400/35 text-sm font-medium text-fuchsia-200 transition-all active:scale-95">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Gallery</span>
+                            <input id="init-gallery-input" type="file" accept="image/*" class="native-file-input">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Inline Validation Message -->
+                <div id="init-error" class="hidden w-full mb-4 px-4 py-2.5 rounded-xl bg-rose-500/15 border border-rose-400/35 text-rose-200 text-xs sm:text-sm text-center font-medium"></div>
+
+                <button id="btn-init-save" type="button" class="btn-glow w-full py-3.5 rounded-2xl font-semibold text-base text-white tracking-wide flex items-center justify-center gap-2">
+                    <span>Save Profile</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- STATE B: CENTERED FAMILY PROFILES GRID (When >= 1 profile exists) -->
+            <div id="people-vault-container" class="hidden w-full max-w-4xl flex flex-col items-center">
+                <div class="text-center mb-8 px-2">
+                    <span class="inline-block px-3.5 py-1 rounded-full text-[11px] font-semibold tracking-widest uppercase bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 mb-2.5">
+                        CK Family Vault
+                    </span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                        Select a Profile
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-300 mt-1.5 max-w-md mx-auto">
+                        Tap any family member's card to open their private custom document vault
+                    </p>
+                </div>
+
+                <!-- Profiles Grid -->
+                <div id="people-grid" class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-8"></div>
+
+                <!-- Prominent + Add More People Button -->
+                <button id="btn-open-add-person" type="button" class="btn-glow px-7 py-3.5 rounded-2xl font-semibold text-sm sm:text-base text-white tracking-wide inline-flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>+ Add More People</span>
+                </button>
+            </div>
+
+        </main>
+    </section>
+
+    <!-- =========================================================
+         PAGE 3: CUSTOM DOCUMENTS VAULT WITH LIVE SEARCH
+         ========================================================= -->
+    <section id="page-documents" class="app-page">
+        <div class="bg-mesh">
+            <div class="mesh-orb mesh-orb-a"></div>
+            <div class="mesh-orb mesh-orb-b"></div>
+            <div class="mesh-orb mesh-orb-c"></div>
+        </div>
+
+        <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-24">
+
+            <!-- Top Header: Back Button + Person Info + Add Document Button -->
+            <header class="glass-card rounded-3xl p-4 sm:p-5 mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button id="btn-back-people" type="button" class="px-3 py-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs sm:text-sm font-semibold text-white inline-flex items-center gap-1.5 transition-all active:scale-95 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        <span>Profiles</span>
+                    </button>
+
+                    <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-violet-500 to-pink-500 shrink-0">
+                        <img id="vault-person-avatar" src="" alt="Profile" class="w-full h-full rounded-full object-cover bg-slate-900">
+                    </div>
+
+                    <div class="min-w-0">
+                        <h1 id="vault-person-title" class="text-base sm:text-lg font-bold text-white truncate">Person's Vault</h1>
+                        <p id="vault-person-phone" class="text-xs text-cyan-300 font-medium tracking-wider">00000 00000</p>
+                    </div>
+                </div>
+
+                <button id="btn-open-add-doc" type="button" class="btn-glow px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-white inline-flex items-center gap-1.5 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>+ Add Document</span>
+                </button>
+            </header>
+
+            <!-- PINNED LIVE SEARCH BAR -->
+            <div class="sticky top-3 z-30 mb-6">
+                <div class="search-sticky rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5">
+                    <svg class="w-5 h-5 text-cyan-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input id="doc-search-input" type="text" autocomplete="off" placeholder="Search documents (e.g. Aadhaar, PAN, A...)" class="w-full bg-transparent text-white placeholder-slate-400 text-sm sm:text-base focus:outline-none">
+                    <button id="btn-clear-search" type="button" class="hidden w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 items-center justify-center shrink-0 transition-all active:scale-90" title="Clear Search">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Live Match Count Badge -->
+                <div class="mt-2 px-1 flex items-center justify-between">
+                    <span id="search-count-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[11px] sm:text-xs font-medium text-cyan-200">
+                        Showing 0 of 0 documents
+                    </span>
+                    <span class="text-[11px] text-slate-400 hidden sm:inline">Instant smart search</span>
+                </div>
+            </div>
+
+            <!-- EMPTY STATE (0 Documents Saved Yet) -->
+            <div id="docs-empty-state" class="hidden glass-card rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center my-6">
+                <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-cyan-500/20 via-violet-500/25 to-pink-500/20 border border-cyan-400/30 flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(6,182,212,0.22)]">
+                    <svg class="w-10 h-10 text-cyan-300" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">No Documents Yet</h2>
+                <p class="text-xs sm:text-sm text-slate-300 max-w-sm mb-6">
+                    Tap <strong>+ Add Document</strong> to save your first custom document with any name you choose (like Aadhaar Front Side, Back Side, PAN Card, etc.).
+                </p>
+                <button id="btn-empty-add-doc" type="button" class="btn-glow px-6 py-3.5 rounded-2xl font-semibold text-sm sm:text-base text-white inline-flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>+ Add Document</span>
+                </button>
+            </div>
+
+            <!-- NO SEARCH MATCH STATE -->
+            <div id="docs-no-match-state" class="hidden glass-card rounded-3xl p-8 text-center flex flex-col items-center justify-center my-6">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-300 flex items-center justify-center mb-3.5">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-1">No Matching Documents</h3>
+                <p id="no-match-text" class="text-xs sm:text-sm text-slate-300 mb-4">No documents matched your search.</p>
+                <button id="btn-reset-search" type="button" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs sm:text-sm font-semibold text-cyan-200 transition-all">
+                    Clear Search
+                </button>
+            </div>
+
+            <!-- SAVED CUSTOM DOCUMENTS GRID -->
+            <div id="documents-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5"></div>
+
+        </div>
+    </section>
+
+    <!-- =========================================================
+         MODAL 1: IN-APP LIVE CAMERA MODAL (Live + Flip + Native + Demo)
+         ========================================================= -->
+    <div id="camera-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-card w-full max-w-md rounded-3xl p-5 sm:p-6 my-auto">
+            <div class="flex items-center justify-between mb-3.5">
+                <div class="min-w-0 pr-2">
+                    <h3 id="camera-modal-title" class="text-lg font-bold text-white truncate">Take Photo</h3>
+                    <p class="text-xs text-slate-300">Live camera, device camera, or demo preview</p>
+                </div>
+                <button id="close-camera-modal" type="button" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Live Camera Viewfinder -->
+            <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-950 border border-white/15 mb-4 flex items-center justify-center">
+                <video id="camera-video" autoplay="" playsinline="" muted="" class="w-full h-full object-cover hidden"></video>
+
+                <!-- Loading Spinner -->
+                <div id="camera-loading" class="flex flex-col items-center justify-center text-slate-300 p-4 text-center">
+                    <div class="w-9 h-9 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin mb-2.5"></div>
+                    <span class="text-xs font-medium">Starting live camera...</span>
+                </div>
+
+                <!-- Helpful Fallback Message when WebView blocks Camera -->
+                <div id="camera-blocked-box" class="hidden flex-col items-center justify-center text-center p-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/35 text-amber-300 flex items-center justify-center mb-2.5">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-xs sm:text-sm font-medium text-amber-200 leading-relaxed">
+                        Preview mode restricted the camera. Tap <strong>Download CK App</strong> and open <strong>CK.html</strong> in Chrome for 100% native Camera &amp; Gallery, or tap <strong>Use Demo Photo</strong> below to test right here!
+                    </p>
+                </div>
+
+                <!-- Flip Front/Back Button -->
+                <button id="btn-flip-camera" type="button" class="hidden absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-black/65 hover:bg-black/85 border border-white/20 text-xs font-semibold text-white items-center gap-1.5 backdrop-blur-md active:scale-95">
+                    <svg class="w-4 h-4 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Flip</span>
+                </button>
+            </div>
+
+            <!-- Big Live Capture Shutter Button -->
+            <button id="btn-capture-live" type="button" class="hidden btn-glow w-full py-3.5 rounded-2xl font-semibold text-sm sm:text-base text-white items-center justify-center gap-2 mb-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                </svg>
+                <span>Capture Photo</span>
+            </button>
+
+            <!-- Always-Available Device Camera & Demo Photo Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <label class="native-file-btn gap-2 py-2.5 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-xs sm:text-sm font-semibold text-cyan-200 transition-all active:scale-95">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span>Device Camera</span>
+                    <input id="camera-native-fallback" type="file" accept="image/*" capture="environment" class="native-file-input">
+                </label>
+
+                <button id="btn-use-demo-photo" type="button" class="inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-xs sm:text-sm font-semibold text-amber-200 transition-all active:scale-95">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                    <span>Use Demo Photo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 2: ADD / EDIT PERSON MODAL
+         ========================================================= -->
+    <div id="person-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-card w-full max-w-md rounded-3xl p-6 sm:p-7 relative my-auto">
+            <div class="flex items-center justify-between mb-5">
+                <h3 id="person-modal-title" class="text-xl font-bold text-white">Add More People</h3>
+                <button id="close-person-modal" type="button" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <label for="modal-person-name" class="block text-sm font-medium text-slate-200 mb-1.5">Enter Name</label>
+                <input id="modal-person-name" type="text" maxlength="40" placeholder="e.g. Papa, Mummy, Brother" class="w-full px-4 py-3 rounded-2xl bg-slate-900/80 border border-white/15 text-white placeholder-slate-400 text-sm sm:text-base focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30">
+            </div>
+
+            <div class="mb-5">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="modal-person-phone" class="text-sm font-medium text-slate-200">Enter Phone Number</label>
+                    <span id="modal-phone-counter" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10 text-slate-300">0/10</span>
+                </div>
+                <input id="modal-person-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" class="w-full px-4 py-3 rounded-2xl bg-slate-900/80 border border-white/15 text-white placeholder-slate-400 text-sm sm:text-base tracking-widest font-medium focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30">
+            </div>
+
+            <div class="mb-5 flex flex-col items-center">
+                <span class="text-sm font-medium text-slate-200 self-start mb-3">Enter Photo</span>
+                <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-cyan-400 via-violet-500 to-pink-500 mb-3.5">
+                    <div class="w-full h-full rounded-full bg-slate-900 overflow-hidden flex items-center justify-center">
+                        <img id="modal-photo-preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                        <svg id="modal-photo-placeholder" class="w-9 h-9 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 w-full">
+                    <button id="btn-modal-camera" type="button" class="inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-sm font-medium text-cyan-200 transition-all active:scale-95">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span>Camera</span>
+                    </button>
+
+                    <label class="native-file-btn gap-2 py-2.5 px-3 rounded-xl bg-fuchsia-500/15 hover:bg-fuchsia-500/25 border border-fuchsia-400/35 text-sm font-medium text-fuchsia-200 transition-all active:scale-95">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Gallery</span>
+                        <input id="modal-gallery-input" type="file" accept="image/*" class="native-file-input">
+                    </label>
+                </div>
+            </div>
+
+            <div id="modal-person-error" class="hidden mb-4 px-4 py-2 rounded-xl bg-rose-500/15 border border-rose-400/35 text-rose-200 text-xs text-center font-medium"></div>
+
+            <button id="btn-save-person-modal" type="button" class="btn-glow w-full py-3.5 rounded-2xl font-semibold text-white">
+                Save Profile
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 3: ADD / EDIT CUSTOM DOCUMENT MODAL
+         ========================================================= -->
+    <div id="doc-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-card w-full max-w-md rounded-3xl p-6 sm:p-7 my-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="doc-modal-title" class="text-xl font-bold text-white">Add Document</h3>
+                <button id="close-doc-modal" type="button" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Custom Document Name Input -->
+            <div class="mb-3">
+                <label for="doc-name-input" class="block text-sm font-medium text-slate-200 mb-1.5">Document Name</label>
+                <input id="doc-name-input" type="text" maxlength="60" placeholder="e.g. Aadhaar Card Front Side, School ID..." class="w-full px-4 py-3 rounded-2xl bg-slate-900/80 border border-white/15 text-white placeholder-slate-400 text-sm sm:text-base focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30">
+            </div>
+
+            <!-- Quick-Fill Suggestion Chips -->
+            <div class="mb-5">
+                <span class="block text-[11px] font-medium text-slate-400 uppercase tracking-wider mb-2">Quick Suggestions (Tap to fill)</span>
+                <div id="doc-suggestion-chips" class="flex flex-wrap gap-1.5">
+                    <button type="button" data-chip="Aadhaar Card Front Side" class="px-2.5 py-1 rounded-full bg-white/8 hover:bg-cyan-500/20 border border-white/12 hover:border-cyan-400/40 text-[11px] font-medium text-slate-200 transition-all active:scale-95">Aadhaar Card Front Side</button>
+                    <button type="button" data-chip="Aadhaar Card Back Side" class="px-2.5 py-1 rounded-full bg-white/8 hover:bg-cyan-500/20 border border-white/12 hover:border-cyan-400/40 text-[11px] font-medium text-slate-200 transition-all active:scale-95">Aadhaar Card Back Side</button>
+                    <button type="button" data-chip="PAN Card" class="px-2.5 py-1 rounded-full bg-white/8 hover:bg-cyan-500/20 border border-white/12 hover:border-cyan-400/40 text-[11px] font-medium text-slate-200 transition-all active:scale-95">PAN Card</button>
+                    <button type="button" data-chip="Voter ID Card" class="px-2.5 py-1 rounded-full bg-white/8 hover:bg-cyan-500/20 border border-white/12 hover:border-cyan-400/40 text-[11px] font-medium text-slate-200 transition-all active:scale-95">Voter ID Card</button>
+                    <button type="button" data-chip="Driving License" class="px-2.5 py-1 rounded-full bg-white/8 hover:bg-cyan-500/20 border border-white/12 hover:border-cyan-400/40 text-[11px] font-medium text-slate-200 transition-all active:scale-95">Driving License</button>
+                </div>
+            </div>
+
+            <!-- Document Photo Upload & Preview -->
+            <div class="mb-5">
+                <span class="block text-sm font-medium text-slate-200 mb-2">Document Photo</span>
+                <div class="w-full h-40 rounded-2xl border border-dashed border-white/20 bg-slate-900/65 flex items-center justify-center overflow-hidden mb-3">
+                    <img id="doc-modal-preview-img" src="" alt="Document Preview" class="w-full h-full object-contain hidden">
+                    <div id="doc-modal-preview-placeholder" class="flex flex-col items-center text-slate-400 px-4 text-center">
+                        <svg class="w-8 h-8 mb-1 opacity-60" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span class="text-xs">Choose a photo using Camera or Gallery</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-doc-modal-camera" type="button" class="inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-sm font-medium text-cyan-200 transition-all active:scale-95">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span>Camera</span>
+                    </button>
+
+                    <label class="native-file-btn gap-2 py-2.5 px-3 rounded-xl bg-fuchsia-500/15 hover:bg-fuchsia-500/25 border border-fuchsia-400/35 text-sm font-medium text-fuchsia-200 transition-all active:scale-95">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Gallery</span>
+                        <input id="doc-modal-gallery" type="file" accept="image/*" class="native-file-input">
+                    </label>
+                </div>
+            </div>
+
+            <div id="doc-modal-error" class="hidden mb-4 px-4 py-2 rounded-xl bg-rose-500/15 border border-rose-400/35 text-rose-200 text-xs text-center font-medium"></div>
+
+            <button id="btn-save-doc-modal" type="button" class="btn-glow w-full py-3.5 rounded-2xl font-semibold text-white">
+                Save Document
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 4: FULL-SCREEN ZOOMABLE IMAGE VIEWER
+         ========================================================= -->
+    <div id="viewer-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center p-4">
+        <div class="w-full max-w-3xl glass-card rounded-3xl p-4 sm:p-5 flex flex-col">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <h3 id="viewer-title" class="text-base sm:text-lg font-semibold text-white truncate">Document Viewer</h3>
+                <button id="close-viewer-modal" type="button" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="w-full h-[58vh] sm:h-[64vh] rounded-2xl bg-slate-950/90 border border-white/10 overflow-auto flex items-center justify-center p-2">
+                <img id="viewer-img" src="" alt="Full Document" class="viewer-img max-w-full max-h-full object-contain rounded-xl">
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
+                <button id="btn-viewer-zoom" type="button" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs sm:text-sm font-medium text-white inline-flex items-center gap-2">
+                    <svg class="w-4 h-4 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                    </svg>
+                    <span id="viewer-zoom-label">Zoom In</span>
+                </button>
+                <button id="btn-viewer-share" type="button" class="px-4 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/35 text-xs sm:text-sm font-medium text-emerald-200 inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                    </svg>
+                    <span>Share</span>
+                </button>
+                <button id="btn-viewer-download" type="button" class="px-4 py-2.5 rounded-xl bg-indigo-500/25 hover:bg-indigo-500/35 border border-indigo-400/35 text-xs sm:text-sm font-medium text-indigo-200 inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>Download</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 5: SHARE DOCUMENT FALLBACK MODAL
+         ========================================================= -->
+    <div id="share-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-sm rounded-3xl p-6 text-center">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white">Share Document</h3>
+                <button id="close-share-modal" type="button" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="w-full h-36 rounded-2xl bg-slate-950/75 border border-white/10 overflow-hidden mb-3 flex items-center justify-center">
+                <img id="share-modal-img" src="" alt="Share Preview" class="max-w-full max-h-full object-contain">
+            </div>
+            <p id="share-modal-docname" class="text-sm font-semibold text-cyan-300 mb-5"></p>
+
+            <div class="space-y-3">
+                <button id="btn-share-download" type="button" class="w-full py-3 px-4 rounded-2xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/35 text-sm font-semibold text-indigo-100 flex items-center justify-center gap-2.5 transition-all active:scale-95">
+                    <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>Download Image</span>
+                </button>
+
+                <button id="btn-share-copy" type="button" class="w-full py-3 px-4 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/35 text-sm font-semibold text-cyan-100 flex items-center justify-center gap-2.5 transition-all active:scale-95">
+                    <svg class="w-5 h-5 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>Copy Image</span>
+                </button>
+
+                <button id="btn-share-whatsapp" type="button" class="w-full py-3 px-4 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-sm font-semibold text-emerald-100 flex items-center justify-center gap-2.5 transition-all active:scale-95">
+                    <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+                    </svg>
+                    <span>Download &amp; Open WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 6: CUSTOM CONFIRMATION MODAL (No window.confirm)
+         ========================================================= -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-xs sm:max-w-sm rounded-3xl p-6 text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-rose-500/20 border border-rose-400/35 flex items-center justify-center text-rose-400">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+            <h3 id="confirm-title" class="text-lg font-bold text-white mb-1.5">Confirm Delete</h3>
+            <p id="confirm-message" class="text-xs sm:text-sm text-slate-300 mb-6">Are you sure you want to delete this?</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button id="btn-confirm-cancel" type="button" class="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-medium text-white">Cancel</button>
+                <button id="btn-confirm-ok" type="button" class="py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-sm font-semibold text-white">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         FLOATING TOAST NOTIFICATION
+         ========================================================= -->
+    <div id="app-toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 translate-y-12 opacity-0 pointer-events-none z-50 px-5 py-3 rounded-2xl bg-slate-900/95 border border-emerald-400/40 text-white text-sm font-medium shadow-[0_12px_35px_rgba(0,0,0,0.55)] flex items-center gap-2.5 transition-all duration-300 whitespace-nowrap max-w-[92vw]">
+        <span id="toast-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
+        <span id="toast-message" class="truncate">Saved!</span>
+    </div>
+
+    <!-- =========================================================
+         CK APPLICATION JAVASCRIPT
+         ========================================================= -->
+    <script>
+        (function () {
+            'use strict';
+
+            /* ---------------------------------------------------------
+               INDEXEDDB STORAGE LAYER (CK_Vault_DB)
+               --------------------------------------------------------- */
+            const DB_NAME = 'CK_Vault_DB';
+            const DB_VERSION = 1;
+            const STORE_PEOPLE = 'people';
+            let dbInstance = null;
+
+            function openDatabase() {
+                return new Promise((resolve) => {
+                    if (!('indexedDB' in window)) {
+                        resolve(null);
+                        return;
+                    }
+                    try {
+                        const request = indexedDB.open(DB_NAME, DB_VERSION);
+                        request.onupgradeneeded = function (event) {
+                            const db = event.target.result;
+                            if (!db.objectStoreNames.contains(STORE_PEOPLE)) {
+                                db.createObjectStore(STORE_PEOPLE, { keyPath: 'id' });
+                            }
+                        };
+                        request.onsuccess = function (event) {
+                            dbInstance = event.target.result;
+                            resolve(dbInstance);
+                        };
+                        request.onerror = function () {
+                            resolve(null);
+                        };
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
+            }
+
+            function dbGetAllPeople() {
+                return new Promise((resolve) => {
+                    if (!dbInstance) {
+                        resolve(appState.people);
+                        return;
+                    }
+                    try {
+                        const tx = dbInstance.transaction(STORE_PEOPLE, 'readonly');
+                        const req = tx.objectStore(STORE_PEOPLE).getAll();
+                        req.onsuccess = () => {
+                            const list = req.result || [];
+                            list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                            resolve(list);
+                        };
+                        req.onerror = () => resolve([]);
+                    } catch (e) {
+                        resolve([]);
+                    }
+                });
+            }
+
+            function dbSavePerson(person) {
+                return new Promise((resolve) => {
+                    if (!dbInstance) {
+                        resolve(true);
+                        return;
+                    }
+                    try {
+                        const tx = dbInstance.transaction(STORE_PEOPLE, 'readwrite');
+                        tx.objectStore(STORE_PEOPLE).put(person);
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => resolve(false);
+                    } catch (e) {
+                        resolve(false);
+                    }
+                });
+            }
+
+            function dbDeletePerson(personId) {
+                return new Promise((resolve) => {
+                    if (!dbInstance) {
+                        resolve(true);
+                        return;
+                    }
+                    try {
+                        const tx = dbInstance.transaction(STORE_PEOPLE, 'readwrite');
+                        tx.objectStore(STORE_PEOPLE).delete(personId);
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => resolve(false);
+                    } catch (e) {
+                        resolve(false);
+                    }
+                });
+            }
+
+            /* ---------------------------------------------------------
+               APPLICATION STATE
+               --------------------------------------------------------- */
+            const appState = {
+                people: [],
+                activePersonId: null,
+                searchQuery: '',
+                initPhoto: '',
+                modalPersonId: null,
+                modalPhoto: '',
+                editingDocId: null,
+                docModalPhoto: '',
+                currentViewer: { title: '', dataUrl: '', fileName: '', personName: '' },
+                currentShare: { title: '', dataUrl: '', fileName: '', personName: '' }
+            };
+
+            function generateId(prefix) {
+                return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+            }
+
+            function getActivePerson() {
+                return appState.people.find(p => p.id === appState.activePersonId) || null;
+            }
+
+            function formatDate(timestamp) {
+                try {
+                    return new Date(timestamp || Date.now()).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+                } catch (e) {
+                    return 'Saved';
+                }
+            }
+
+            function escapeHtml(str) {
+                return String(str || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            /* ---------------------------------------------------------
+               IMAGE COMPRESSION HELPER
+               --------------------------------------------------------- */
+            function readAndCompressImage(file, maxDim, callback) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.onload = function () {
+                        try {
+                            let w = img.width;
+                            let h = img.height;
+                            if (w > maxDim || h > maxDim) {
+                                if (w > h) {
+                                    h = Math.round((h * maxDim) / w);
+                                    w = maxDim;
+                                } else {
+                                    w = Math.round((w * maxDim) / h);
+                                    h = maxDim;
+                                }
+                            }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = w;
+                            canvas.height = h;
+                            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                            callback(canvas.toDataURL('image/jpeg', 0.82));
+                        } catch (err) {
+                            callback(e.target.result);
+                        }
+                    };
+                    img.onerror = function () {
+                        callback(e.target.result);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            /* ---------------------------------------------------------
+               DEMO PHOTO GENERATOR (Canvas Avatar or Document Card)
+               --------------------------------------------------------- */
+            function generateDemoPhoto(mode, labelText) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                if (mode === 'avatar') {
+                    canvas.width = 480;
+                    canvas.height = 480;
+                    const grad = ctx.createLinearGradient(0, 0, 480, 480);
+                    grad.addColorStop(0, '#06b6d4');
+                    grad.addColorStop(0.5, '#6366f1');
+                    grad.addColorStop(1, '#ec4899');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, 480, 480);
+
+                    ctx.strokeStyle = 'rgba(255,255,255,0.24)';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(240, 240, 200, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+                    ctx.beginPath();
+                    ctx.arc(240, 176, 70, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(240, 396, 136, Math.PI * 1.12, Math.PI * 1.88);
+                    ctx.fill();
+
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.76)';
+                    ctx.fillRect(85, 394, 310, 46);
+                    ctx.fillStyle = '#e0f2fe';
+                    ctx.font = 'bold 22px Poppins, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText((labelText || 'CK PROFILE').slice(0, 18).toUpperCase(), 240, 417);
+                    return canvas.toDataURL('image/jpeg', 0.85);
+                }
+
+                // Realistic Sample Document Card
+                canvas.width = 820;
+                canvas.height = 510;
+                const grad = ctx.createLinearGradient(0, 0, 820, 510);
+                grad.addColorStop(0, '#0f172a');
+                grad.addColorStop(0.55, '#1e1b4b');
+                grad.addColorStop(1, '#064e3b');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 820, 510);
+
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 6;
+                ctx.strokeRect(20, 20, 780, 470);
+
+                const band = ctx.createLinearGradient(24, 24, 796, 108);
+                band.addColorStop(0, '#06b6d4');
+                band.addColorStop(1, '#a855f7');
+                ctx.fillStyle = band;
+                ctx.fillRect(24, 24, 772, 86);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 30px Poppins, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText((labelText || 'CUSTOM DOCUMENT').slice(0, 28).toUpperCase(), 48, 67);
+
+                ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                ctx.fillRect(52, 146, 165, 206);
+                ctx.fillStyle = 'rgba(255,255,255,0.78)';
+                ctx.beginPath();
+                ctx.arc(134, 216, 36, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(134, 332, 62, Math.PI * 1.15, Math.PI * 1.85);
+                ctx.fill();
+
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'bold 20px Poppins, sans-serif';
+                ctx.fillText('CK VAULT • DEMO PREVIEW', 250, 178);
+
+                const activeP = getActivePerson();
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = '600 26px Poppins, sans-serif';
+                ctx.fillText(`Holder: ${activeP ? activeP.name : 'CK Member'}`, 250, 234);
+
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '500 21px monospace';
+                ctx.fillText('DOC ID: CK-2026-4812-9073', 250, 288);
+                ctx.fillText('STATUS: SAVED PERMANENTLY', 250, 334);
+
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.24)';
+                ctx.fillRect(52, 402, 716, 52);
+                ctx.fillStyle = '#bae6fd';
+                ctx.font = '600 17px Poppins, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('DEMO PHOTO • DOWNLOAD CK.HTML & OPEN IN CHROME FOR REAL CAMERA', 410, 428);
+
+                return canvas.toDataURL('image/jpeg', 0.85);
+            }
+
+            /* ---------------------------------------------------------
+               IN-APP LIVE CAMERA MODAL CONTROLLER
+               --------------------------------------------------------- */
+            const cameraModal = document.getElementById('camera-modal');
+            const cameraVideo = document.getElementById('camera-video');
+            const cameraLoading = document.getElementById('camera-loading');
+            const cameraBlockedBox = document.getElementById('camera-blocked-box');
+            const btnFlipCamera = document.getElementById('btn-flip-camera');
+            const btnCaptureLive = document.getElementById('btn-capture-live');
+            const cameraNativeFallback = document.getElementById('camera-native-fallback');
+
+            let activeCameraStream = null;
+            let cameraFacingMode = 'environment';
+            let cameraContext = { mode: 'doc', label: 'Photo', maxDim: 1200, onCapture: null };
+
+            function stopCameraStream() {
+                if (activeCameraStream) {
+                    activeCameraStream.getTracks().forEach(t => {
+                        try { t.stop(); } catch (e) {}
+                    });
+                    activeCameraStream = null;
+                }
+                cameraVideo.srcObject = null;
+            }
+
+            function showCameraBlockedState() {
+                cameraLoading.classList.add('hidden');
+                cameraVideo.classList.add('hidden');
+                btnCaptureLive.classList.add('hidden');
+                btnCaptureLive.classList.remove('flex');
+                btnFlipCamera.classList.add('hidden');
+                btnFlipCamera.classList.remove('inline-flex');
+                cameraBlockedBox.classList.remove('hidden');
+                cameraBlockedBox.classList.add('flex');
+            }
+
+            async function startLiveCameraStream() {
+                stopCameraStream();
+                cameraVideo.classList.add('hidden');
+                btnCaptureLive.classList.add('hidden');
+                btnCaptureLive.classList.remove('flex');
+                btnFlipCamera.classList.add('hidden');
+                btnFlipCamera.classList.remove('inline-flex');
+                cameraBlockedBox.classList.add('hidden');
+                cameraBlockedBox.classList.remove('flex');
+                cameraLoading.classList.remove('hidden');
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    showCameraBlockedState();
+                    return;
+                }
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: cameraFacingMode } },
+                        audio: false
+                    });
+                    activeCameraStream = stream;
+                    cameraVideo.srcObject = stream;
+                    await cameraVideo.play();
+
+                    cameraLoading.classList.add('hidden');
+                    cameraVideo.classList.remove('hidden');
+                    btnCaptureLive.classList.remove('hidden');
+                    btnCaptureLive.classList.add('flex');
+                    btnFlipCamera.classList.remove('hidden');
+                    btnFlipCamera.classList.add('inline-flex');
+                } catch (err) {
+                    showCameraBlockedState();
+                }
+            }
+
+            function openCameraModal(options) {
+                cameraContext = {
+                    mode: options.mode || 'doc',
+                    label: options.label || 'Photo',
+                    maxDim: options.maxDim || 1200,
+                    onCapture: options.onCapture
+                };
+                cameraFacingMode = options.mode === 'avatar' ? 'user' : 'environment';
+                cameraNativeFallback.setAttribute('capture', cameraFacingMode);
+                document.getElementById('camera-modal-title').textContent = `Take Photo — ${cameraContext.label}`;
+                cameraModal.classList.remove('hidden');
+                cameraModal.classList.add('flex');
+                startLiveCameraStream();
+            }
+
+            function closeCameraModal() {
+                stopCameraStream();
+                cameraModal.classList.add('hidden');
+                cameraModal.classList.remove('flex');
+            }
+
+            document.getElementById('close-camera-modal').addEventListener('click', closeCameraModal);
+            cameraModal.addEventListener('click', (e) => {
+                if (e.target === cameraModal) closeCameraModal();
+            });
+
+            btnFlipCamera.addEventListener('click', () => {
+                cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+                startLiveCameraStream();
+            });
+
+            btnCaptureLive.addEventListener('click', () => {
+                if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) return;
+                let w = cameraVideo.videoWidth;
+                let h = cameraVideo.videoHeight;
+                const maxDim = cameraContext.maxDim || 1200;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+                const c = document.createElement('canvas');
+                c.width = w;
+                c.height = h;
+                c.getContext('2d').drawImage(cameraVideo, 0, 0, w, h);
+                const dataUrl = c.toDataURL('image/jpeg', 0.84);
+                const cb = cameraContext.onCapture;
+                closeCameraModal();
+                if (typeof cb === 'function') cb(dataUrl);
+            });
+
+            cameraNativeFallback.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const maxDim = cameraContext.maxDim || 1200;
+                const cb = cameraContext.onCapture;
+                readAndCompressImage(file, maxDim, (dataUrl) => {
+                    closeCameraModal();
+                    if (typeof cb === 'function') cb(dataUrl);
+                });
+                e.target.value = '';
+            });
+
+            document.getElementById('btn-use-demo-photo').addEventListener('click', () => {
+                const demoUrl = generateDemoPhoto(cameraContext.mode, cameraContext.label);
+                const cb = cameraContext.onCapture;
+                closeCameraModal();
+                if (typeof cb === 'function') cb(demoUrl);
+            });
+
+            /* ---------------------------------------------------------
+               DOWNLOAD CK APP (CK.html) — CLEAN SNAPSHOT SERIALIZER
+               --------------------------------------------------------- */
+            document.getElementById('btn-download-app').addEventListener('click', () => {
+                try {
+                    const clone = document.documentElement.cloneNode(true);
+
+                    // Reset pages to fresh Page 1 Splash state
+                    const pSplash = clone.querySelector('#page-splash');
+                    const pPeople = clone.querySelector('#page-people');
+                    const pDocs = clone.querySelector('#page-documents');
+                    if (pSplash) {
+                        pSplash.classList.add('active');
+                        pSplash.classList.remove('exit-zoom');
+                    }
+                    if (pPeople) pPeople.classList.remove('active', 'exit-zoom');
+                    if (pDocs) pDocs.classList.remove('active', 'exit-zoom');
+
+                    // Reset splash HUD
+                    const spPct = clone.querySelector('#splash-percent');
+                    const spBar = clone.querySelector('#splash-bar');
+                    const spStatus = clone.querySelector('#splash-status');
+                    const spSkip = clone.querySelector('#btn-skip-splash');
+                    if (spPct) spPct.textContent = '0';
+                    if (spBar) spBar.style.width = '0%';
+                    if (spStatus) spStatus.textContent = 'Initializing CK Vault...';
+                    if (spSkip) spSkip.classList.add('opacity-0', 'pointer-events-none');
+
+                    // Clear dynamically rendered DOM & reset inputs/modals
+                    const pg = clone.querySelector('#people-grid');
+                    const dg = clone.querySelector('#documents-grid');
+                    if (pg) pg.innerHTML = '';
+                    if (dg) dg.innerHTML = '';
+
+                    const searchInput = clone.querySelector('#doc-search-input');
+                    if (searchInput) searchInput.value = '';
+
+                    clone.querySelectorAll('#camera-modal, #person-modal, #doc-modal, #viewer-modal, #share-modal, #confirm-modal').forEach(m => {
+                        m.classList.add('hidden');
+                        m.classList.remove('flex');
+                    });
+
+                    const toast = clone.querySelector('#app-toast');
+                    if (toast) toast.classList.remove('toast-enter');
+
+                    const fullHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+                    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'CK.html';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 1500);
+                    showToast('CK.html downloaded! Open it in Chrome.');
+                } catch (err) {
+                    showToast('Download blocked in this preview.', true);
+                }
+            });
+
+            /* ---------------------------------------------------------
+               TOAST & CUSTOM CONFIRMATION MODAL
+               --------------------------------------------------------- */
+            let toastTimer = null;
+            function showToast(message, isError = false) {
+                const toast = document.getElementById('app-toast');
+                const toastMsg = document.getElementById('toast-message');
+                const toastDot = document.getElementById('toast-dot');
+                toastMsg.textContent = message;
+                toastDot.className = isError
+                    ? 'w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0'
+                    : 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
+                toast.classList.add('toast-enter');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('toast-enter');
+                }, 2800);
+            }
+
+            let pendingConfirmCallback = null;
+            const confirmModal = document.getElementById('confirm-modal');
+            function openConfirmModal(title, message, onConfirm) {
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').textContent = message;
+                pendingConfirmCallback = onConfirm;
+                confirmModal.classList.remove('hidden');
+                confirmModal.classList.add('flex');
+            }
+            function closeConfirmModal() {
+                confirmModal.classList.add('hidden');
+                confirmModal.classList.remove('flex');
+                pendingConfirmCallback = null;
+            }
+            document.getElementById('btn-confirm-cancel').addEventListener('click', closeConfirmModal);
+            document.getElementById('btn-confirm-ok').addEventListener('click', () => {
+                if (typeof pendingConfirmCallback === 'function') pendingConfirmCallback();
+                closeConfirmModal();
+            });
+            confirmModal.addEventListener('click', (e) => {
+                if (e.target === confirmModal) closeConfirmModal();
+            });
+
+            /* ---------------------------------------------------------
+               PAGE NAVIGATION CONTROLLER
+               --------------------------------------------------------- */
+            function switchPage(fromId, toId) {
+                const fromEl = document.getElementById(fromId);
+                const toEl = document.getElementById(toId);
+                if (fromEl) {
+                    fromEl.classList.add('exit-zoom');
+                    fromEl.classList.remove('active');
+                    setTimeout(() => fromEl.classList.remove('exit-zoom'), 650);
+                }
+                if (toEl) {
+                    toEl.scrollTop = 0;
+                    toEl.classList.add('active');
+                }
+            }
+
+            /* ---------------------------------------------------------
+               PAGE 1: 10-SECOND FUTURISTIC CANVAS ANIMATION
+               --------------------------------------------------------- */
+            function startCinematicSplash() {
+                const canvas = document.getElementById('splash-canvas');
+                const ctx = canvas.getContext('2d');
+                const percentEl = document.getElementById('splash-percent');
+                const barEl = document.getElementById('splash-bar');
+                const statusEl = document.getElementById('splash-status');
+                const skipBtn = document.getElementById('btn-skip-splash');
+
+                const DURATION_MS = 10000;
+                const STATUS_STEPS = [
+                    'Initializing CK Vault...',
+                    'Syncing Security Layers...',
+                    'Loading Modules...',
+                    'Optimizing Interface...',
+                    'Preparing Profiles...',
+                    'Ready'
+                ];
+                const PALETTE = [
+                    [0, 245, 255],   // Electric Cyan
+                    [168, 85, 247],  // Neon Violet
+                    [236, 72, 153],  // Hot Magenta
+                    [16, 185, 129],  // Emerald
+                    [250, 204, 21]   // Radiant Gold
+                ];
+
+                let width = 0;
+                let height = 0;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                const particles = [];
+                const sparks = [];
+                let animId = null;
+                let finished = false;
+
+                function finishSplash() {
+                    if (finished) return;
+                    finished = true;
+                    cancelAnimationFrame(animId);
+                    switchPage('page-splash', 'page-people');
+                }
+
+                // Reveal Skip button after 2 seconds
+                setTimeout(() => {
+                    if (!finished) {
+                        skipBtn.classList.remove('opacity-0', 'pointer-events-none');
+                    }
+                }, 2000);
+                skipBtn.addEventListener('click', finishSplash);
+
+                function resizeCanvas() {
+                    width = window.innerWidth;
+                    height = window.innerHeight;
+                    canvas.width = Math.floor(width * dpr);
+                    canvas.height = Math.floor(height * dpr);
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                }
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+
+                function spawnBurst(x, y, count = 22) {
+                    for (let i = 0; i < count; i++) {
+                        const angle = (Math.PI * 2 * i) / count + Math.random() * 0.35;
+                        const speed = 1.9 + Math.random() * 4.8;
+                        sparks.push({
+                            x, y,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            life: 1,
+                            decay: 0.02 + Math.random() * 0.02,
+                            size: 1.5 + Math.random() * 2.8
+                        });
+                    }
+                }
+
+                canvas.addEventListener('pointerdown', (e) => {
+                    spawnBurst(e.clientX, e.clientY, 28);
+                });
+
+                for (let i = 0; i < 96; i++) {
+                    particles.push({
+                        angle: Math.random() * Math.PI * 2,
+                        radius: 42 + Math.random() * Math.max(width, height) * 0.55,
+                        speed: (0.004 + Math.random() * 0.015) * (Math.random() > 0.5 ? 1 : -1),
+                        size: 1.3 + Math.random() * 2.8,
+                        phase: Math.random() * Math.PI * 2
+                    });
+                }
+
+                function getMorphColor(progress, offset = 0) {
+                    const scaled = ((progress * (PALETTE.length - 1)) + offset) % PALETTE.length;
+                    const idx1 = Math.floor(scaled);
+                    const idx2 = (idx1 + 1) % PALETTE.length;
+                    const frac = scaled - idx1;
+                    const c1 = PALETTE[idx1];
+                    const c2 = PALETTE[idx2];
+                    const r = Math.round(c1[0] + (c2[0] - c1[0]) * frac);
+                    const g = Math.round(c1[1] + (c2[1] - c1[1]) * frac);
+                    const b = Math.round(c1[2] + (c2[2] - c1[2]) * frac);
+                    return { r, g, b, str: `rgb(${r},${g},${b})` };
+                }
+
+                function drawPolygon(cx, cy, radius, sides, rotation, color, alpha, lineWidth) {
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.rotate(rotation);
+                    ctx.beginPath();
+                    for (let i = 0; i <= sides; i++) {
+                        const theta = (i / sides) * Math.PI * 2;
+                        const x = Math.cos(theta) * radius;
+                        const y = Math.sin(theta) * radius;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.strokeStyle = `rgba(${color.r},${color.g},${color.b},${alpha})`;
+                    ctx.lineWidth = lineWidth;
+                    ctx.shadowBlur = 18;
+                    ctx.shadowColor = color.str;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                const startTime = performance.now();
+                let lastStep = -1;
+
+                function frame(now) {
+                    if (finished) return;
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / DURATION_MS, 1);
+                    const pct = Math.floor(progress * 100);
+
+                    percentEl.textContent = pct;
+                    barEl.style.width = `${progress * 100}%`;
+
+                    const stepIdx = Math.min(Math.floor(progress * STATUS_STEPS.length), STATUS_STEPS.length - 1);
+                    if (stepIdx !== lastStep) {
+                        lastStep = stepIdx;
+                        statusEl.style.opacity = '0';
+                        setTimeout(() => {
+                            statusEl.textContent = STATUS_STEPS[stepIdx];
+                            statusEl.style.opacity = '1';
+                        }, 130);
+                        spawnBurst(width / 2, height / 2, 18);
+                    }
+
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.fillStyle = 'rgba(5, 6, 16, 0.22)';
+                    ctx.fillRect(0, 0, width, height);
+
+                    const cx = width / 2;
+                    const cy = height / 2;
+                    const base = Math.min(width, height) * 0.36;
+                    const c1 = getMorphColor(progress, 0);
+                    const c2 = getMorphColor(progress, 1.7);
+                    const c3 = getMorphColor(progress, 3.1);
+                    const t = elapsed * 0.001;
+
+                    ctx.globalCompositeOperation = 'lighter';
+
+                    // Expanding energy waves
+                    for (let i = 0; i < 3; i++) {
+                        const phase = ((elapsed * 0.00045) + i / 3) % 1;
+                        const r = phase * Math.max(width, height) * 0.62;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                        ctx.strokeStyle = `rgba(${c1.r},${c1.g},${c1.b},${(1 - phase) * 0.36})`;
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+
+                    // Morphing neon polygons
+                    const sides = 3 + Math.floor(progress * 5);
+                    const breathe = 1 + Math.sin(t * 2.5) * 0.08;
+                    drawPolygon(cx, cy, base * 1.15 * breathe, sides, t * 0.45, c1, 0.48, 2);
+                    drawPolygon(cx, cy, base * 0.92, sides + 1, -t * 0.65, c2, 0.42, 1.6);
+                    drawPolygon(cx, cy, base * 1.38, 6, t * 0.25, c3, 0.28, 1.2);
+
+                    // Rotating neon arcs
+                    for (let a = 0; a < 4; a++) {
+                        const start = t * (0.9 + a * 0.25) + (a * Math.PI) / 2;
+                        const len = Math.PI * (0.35 + 0.15 * Math.sin(t * 2 + a));
+                        const r = base * (0.72 + a * 0.22);
+                        const col = a % 2 === 0 ? c1 : c2;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, r, start, start + len);
+                        ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},0.55)`;
+                        ctx.lineWidth = 2.5;
+                        ctx.shadowBlur = 16;
+                        ctx.shadowColor = col.str;
+                        ctx.stroke();
+                    }
+
+                    // Swirling glowing particles
+                    particles.forEach((p, idx) => {
+                        p.angle += p.speed * (1 + progress * 1.4);
+                        p.radius += Math.sin(t * 2 + p.phase) * 0.45;
+                        const px = cx + Math.cos(p.angle) * p.radius;
+                        const py = cy + Math.sin(p.angle) * p.radius;
+                        const col = idx % 3 === 0 ? c1 : (idx % 3 === 1 ? c2 : c3);
+                        ctx.beginPath();
+                        ctx.arc(px, py, p.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},0.85)`;
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = col.str;
+                        ctx.fill();
+                    });
+
+                    // Spark bursts
+                    for (let i = sparks.length - 1; i >= 0; i--) {
+                        const s = sparks[i];
+                        s.x += s.vx;
+                        s.y += s.vy;
+                        s.vx *= 0.96;
+                        s.vy *= 0.96;
+                        s.life -= s.decay;
+                        if (s.life <= 0) {
+                            sparks.splice(i, 1);
+                            continue;
+                        }
+                        ctx.beginPath();
+                        ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${c3.r},${c3.g},${c3.b},${s.life})`;
+                        ctx.fill();
+                    }
+
+                    if (progress < 1) {
+                        animId = requestAnimationFrame(frame);
+                    } else {
+                        percentEl.textContent = '100';
+                        barEl.style.width = '100%';
+                        statusEl.textContent = 'Ready';
+                        setTimeout(finishSplash, 250);
+                    }
+                }
+
+                animId = requestAnimationFrame(frame);
+            }
+
+            /* ---------------------------------------------------------
+               PAGE 2: PROFILES & FAMILY VAULT
+               --------------------------------------------------------- */
+            const firstProfileContainer = document.getElementById('first-profile-container');
+            const peopleVaultContainer = document.getElementById('people-vault-container');
+            const peopleGrid = document.getElementById('people-grid');
+
+            const initNameInput = document.getElementById('init-name');
+            const initPhoneInput = document.getElementById('init-phone');
+            const initPhoneCounter = document.getElementById('init-phone-counter');
+            const initPhotoPreview = document.getElementById('init-photo-preview');
+            const initPhotoPlaceholder = document.getElementById('init-photo-placeholder');
+            const initError = document.getElementById('init-error');
+
+            function updatePhoneCounter(inputEl, counterEl) {
+                const digits = inputEl.value.replace(/\D/g, '').slice(0, 10);
+                inputEl.value = digits;
+                counterEl.textContent = `${digits.length}/10`;
+                counterEl.className = digits.length === 10
+                    ? 'text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                    : 'text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10 text-slate-300';
+            }
+
+            initPhoneInput.addEventListener('input', () => {
+                updatePhoneCounter(initPhoneInput, initPhoneCounter);
+                initError.classList.add('hidden');
+            });
+            initNameInput.addEventListener('input', () => initError.classList.add('hidden'));
+
+            function applyInitPhoto(dataUrl) {
+                appState.initPhoto = dataUrl;
+                initPhotoPreview.src = dataUrl;
+                initPhotoPreview.classList.remove('hidden');
+                initPhotoPlaceholder.classList.add('hidden');
+                initError.classList.add('hidden');
+                showToast('Photo selected!');
+            }
+
+            document.getElementById('btn-init-camera').addEventListener('click', () => {
+                openCameraModal({
+                    mode: 'avatar',
+                    label: initNameInput.value.trim() || 'Profile Photo',
+                    maxDim: 600,
+                    onCapture: applyInitPhoto
+                });
+            });
+
+            document.getElementById('init-gallery-input').addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                readAndCompressImage(file, 600, applyInitPhoto);
+                e.target.value = '';
+            });
+
+            document.getElementById('btn-init-save').addEventListener('click', async () => {
+                const name = initNameInput.value.trim();
+                const phone = initPhoneInput.value.replace(/\D/g, '');
+                if (!name) {
+                    initError.textContent = 'Please enter your name.';
+                    initError.classList.remove('hidden');
+                    initNameInput.focus();
+                    return;
+                }
+                if (phone.length !== 10) {
+                    initError.textContent = 'Phone number must be exactly 10 digits.';
+                    initError.classList.remove('hidden');
+                    initPhoneInput.focus();
+                    return;
+                }
+                if (!appState.initPhoto) {
+                    initError.textContent = 'Please add your photo using Camera or Gallery.';
+                    initError.classList.remove('hidden');
+                    return;
+                }
+
+                const newPerson = {
+                    id: generateId('person'),
+                    name,
+                    phone,
+                    photo: appState.initPhoto,
+                    createdAt: Date.now(),
+                    documents: []
+                };
+
+                appState.people.push(newPerson);
+                await dbSavePerson(newPerson);
+
+                initNameInput.value = '';
+                initPhoneInput.value = '';
+                updatePhoneCounter(initPhoneInput, initPhoneCounter);
+                appState.initPhoto = '';
+                initPhotoPreview.classList.add('hidden');
+                initPhotoPlaceholder.classList.remove('hidden');
+
+                renderPeopleHub();
+                showToast('Profile saved to CK Vault!');
+            });
+
+            function renderPeopleHub() {
+                if (appState.people.length === 0) {
+                    firstProfileContainer.classList.remove('hidden');
+                    peopleVaultContainer.classList.add('hidden');
+                    return;
+                }
+
+                firstProfileContainer.classList.add('hidden');
+                peopleVaultContainer.classList.remove('hidden');
+                peopleGrid.innerHTML = '';
+
+                appState.people.forEach((person) => {
+                    const docsCount = Array.isArray(person.documents) ? person.documents.length : 0;
+
+                    const card = document.createElement('div');
+                    card.className = 'interactive-card rounded-3xl p-5 flex flex-col items-center text-center relative cursor-pointer group';
+                    card.setAttribute('data-open-person', person.id);
+
+                    card.innerHTML = `
+                        <div class="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10">
+                            <button type="button" data-edit-person="${person.id}" title="Edit Profile" class="w-8 h-8 rounded-full bg-white/10 hover:bg-cyan-500/30 border border-white/10 text-slate-200 hover:text-cyan-200 flex items-center justify-center transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                            <button type="button" data-delete-person="${person.id}" title="Delete Profile" class="w-8 h-8 rounded-full bg-white/10 hover:bg-rose-500/30 border border-white/10 text-slate-200 hover:text-rose-200 flex items-center justify-center transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-cyan-400 via-violet-500 to-pink-500 mb-3.5 shadow-[0_0_24px_rgba(6,182,212,0.3)] group-hover:scale-105 transition-transform">
+                            <img src="${person.photo}" alt="${escapeHtml(person.name)}" class="w-full h-full rounded-full object-cover bg-slate-900">
+                        </div>
+
+                        <h3 class="text-lg font-bold text-white truncate max-w-full px-2">${escapeHtml(person.name)}</h3>
+                        <p class="text-xs text-cyan-300 font-medium tracking-wider mt-0.5">${escapeHtml(person.phone.slice(0, 5))} ${escapeHtml(person.phone.slice(5))}</p>
+
+                        <div class="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>${docsCount} ${docsCount === 1 ? 'Document' : 'Documents'} Saved</span>
+                        </div>
+
+                        <div class="mt-4 w-full py-2 rounded-xl bg-white/5 group-hover:bg-cyan-500/20 border border-white/10 group-hover:border-cyan-400/35 text-xs font-semibold text-slate-200 group-hover:text-cyan-200 transition-colors">
+                            Open Vault →
+                        </div>
+                    `;
+                    peopleGrid.appendChild(card);
+                });
+            }
+
+            peopleGrid.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('[data-edit-person]');
+                if (editBtn) {
+                    e.stopPropagation();
+                    openPersonModal(editBtn.getAttribute('data-edit-person'));
+                    return;
+                }
+                const deleteBtn = e.target.closest('[data-delete-person]');
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    const id = deleteBtn.getAttribute('data-delete-person');
+                    const target = appState.people.find(p => p.id === id);
+                    if (!target) return;
+                    openConfirmModal(
+                        'Delete Profile?',
+                        `Permanently delete "${target.name}" and all their saved documents?`,
+                        async () => {
+                            appState.people = appState.people.filter(p => p.id !== id);
+                            await dbDeletePerson(id);
+                            renderPeopleHub();
+                            showToast('Profile deleted');
+                        }
+                    );
+                    return;
+                }
+                const card = e.target.closest('[data-open-person]');
+                if (card) {
+                    openPersonVault(card.getAttribute('data-open-person'));
+                }
+            });
+
+            /* ---------------------------------------------------------
+               ADD / EDIT PERSON MODAL LOGIC
+               --------------------------------------------------------- */
+            const personModal = document.getElementById('person-modal');
+            const modalPersonTitle = document.getElementById('person-modal-title');
+            const modalPersonName = document.getElementById('modal-person-name');
+            const modalPersonPhone = document.getElementById('modal-person-phone');
+            const modalPhoneCounter = document.getElementById('modal-phone-counter');
+            const modalPhotoPreview = document.getElementById('modal-photo-preview');
+            const modalPhotoPlaceholder = document.getElementById('modal-photo-placeholder');
+            const modalPersonError = document.getElementById('modal-person-error');
+
+            modalPersonPhone.addEventListener('input', () => {
+                updatePhoneCounter(modalPersonPhone, modalPhoneCounter);
+                modalPersonError.classList.add('hidden');
+            });
+            modalPersonName.addEventListener('input', () => modalPersonError.classList.add('hidden'));
+
+            function applyModalPhoto(dataUrl) {
+                appState.modalPhoto = dataUrl;
+                modalPhotoPreview.src = dataUrl;
+                modalPhotoPreview.classList.remove('hidden');
+                modalPhotoPlaceholder.classList.add('hidden');
+                modalPersonError.classList.add('hidden');
+                showToast('Photo selected!');
+            }
+
+            function openPersonModal(editPersonId = null) {
+                appState.modalPersonId = editPersonId;
+                modalPersonError.classList.add('hidden');
+
+                if (editPersonId) {
+                    const person = appState.people.find(p => p.id === editPersonId);
+                    if (!person) return;
+                    modalPersonTitle.textContent = 'Edit Profile';
+                    modalPersonName.value = person.name;
+                    modalPersonPhone.value = person.phone;
+                    appState.modalPhoto = person.photo;
+                    modalPhotoPreview.src = person.photo;
+                    modalPhotoPreview.classList.remove('hidden');
+                    modalPhotoPlaceholder.classList.add('hidden');
+                } else {
+                    modalPersonTitle.textContent = 'Add More People';
+                    modalPersonName.value = '';
+                    modalPersonPhone.value = '';
+                    appState.modalPhoto = '';
+                    modalPhotoPreview.src = '';
+                    modalPhotoPreview.classList.add('hidden');
+                    modalPhotoPlaceholder.classList.remove('hidden');
+                }
+                updatePhoneCounter(modalPersonPhone, modalPhoneCounter);
+                personModal.classList.remove('hidden');
+                personModal.classList.add('flex');
+            }
+
+            function closePersonModal() {
+                personModal.classList.add('hidden');
+                personModal.classList.remove('flex');
+            }
+
+            document.getElementById('btn-open-add-person').addEventListener('click', () => openPersonModal(null));
+            document.getElementById('close-person-modal').addEventListener('click', closePersonModal);
+            personModal.addEventListener('click', (e) => {
+                if (e.target === personModal) closePersonModal();
+            });
+
+            document.getElementById('btn-modal-camera').addEventListener('click', () => {
+                openCameraModal({
+                    mode: 'avatar',
+                    label: modalPersonName.value.trim() || 'Family Member',
+                    maxDim: 600,
+                    onCapture: applyModalPhoto
+                });
+            });
+
+            document.getElementById('modal-gallery-input').addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                readAndCompressImage(file, 600, applyModalPhoto);
+                e.target.value = '';
+            });
+
+            document.getElementById('btn-save-person-modal').addEventListener('click', async () => {
+                const name = modalPersonName.value.trim();
+                const phone = modalPersonPhone.value.replace(/\D/g, '');
+
+                if (!name) {
+                    modalPersonError.textContent = 'Please enter a name.';
+                    modalPersonError.classList.remove('hidden');
+                    return;
+                }
+                if (phone.length !== 10) {
+                    modalPersonError.textContent = 'Phone number must be exactly 10 digits.';
+                    modalPersonError.classList.remove('hidden');
+                    return;
+                }
+                if (!appState.modalPhoto) {
+                    modalPersonError.textContent = 'Please choose a photo using Camera or Gallery.';
+                    modalPersonError.classList.remove('hidden');
+                    return;
+                }
+
+                if (appState.modalPersonId) {
+                    const person = appState.people.find(p => p.id === appState.modalPersonId);
+                    if (person) {
+                        person.name = name;
+                        person.phone = phone;
+                        person.photo = appState.modalPhoto;
+                        await dbSavePerson(person);
+                        showToast('Profile updated!');
+                    }
+                } else {
+                    const newPerson = {
+                        id: generateId('person'),
+                        name,
+                        phone,
+                        photo: appState.modalPhoto,
+                        createdAt: Date.now(),
+                        documents: []
+                    };
+                    appState.people.push(newPerson);
+                    await dbSavePerson(newPerson);
+                    showToast(`${name} added to CK Vault!`);
+                }
+
+                closePersonModal();
+                renderPeopleHub();
+            });
+
+            /* ---------------------------------------------------------
+               PAGE 3: CUSTOM DOCUMENTS VAULT & LIVE SMART SEARCH
+               --------------------------------------------------------- */
+            const documentsGrid = document.getElementById('documents-grid');
+            const docsEmptyState = document.getElementById('docs-empty-state');
+            const docsNoMatchState = document.getElementById('docs-no-match-state');
+            const docSearchInput = document.getElementById('doc-search-input');
+            const btnClearSearch = document.getElementById('btn-clear-search');
+            const searchCountBadge = document.getElementById('search-count-badge');
+
+            function openPersonVault(personId) {
+                appState.activePersonId = personId;
+                appState.searchQuery = '';
+                docSearchInput.value = '';
+                updateClearSearchBtn();
+                renderPersonVault();
+                switchPage('page-people', 'page-documents');
+            }
+
+            document.getElementById('btn-back-people').addEventListener('click', () => {
+                renderPeopleHub();
+                switchPage('page-documents', 'page-people');
+            });
+
+            function updateClearSearchBtn() {
+                if (appState.searchQuery.length > 0) {
+                    btnClearSearch.classList.remove('hidden');
+                    btnClearSearch.classList.add('inline-flex');
+                } else {
+                    btnClearSearch.classList.add('hidden');
+                    btnClearSearch.classList.remove('inline-flex');
+                }
+            }
+
+            docSearchInput.addEventListener('input', () => {
+                appState.searchQuery = docSearchInput.value;
+                updateClearSearchBtn();
+                renderPersonVault();
+            });
+
+            function clearSearch() {
+                appState.searchQuery = '';
+                docSearchInput.value = '';
+                updateClearSearchBtn();
+                renderPersonVault();
+                docSearchInput.focus();
+            }
+
+            btnClearSearch.addEventListener('click', clearSearch);
+            document.getElementById('btn-reset-search').addEventListener('click', clearSearch);
+
+            // Smart Search: prioritizes startsWith matches, then includes matches
+            function filterAndSortDocuments(docs, rawQuery) {
+                const q = rawQuery.trim().toLowerCase();
+                if (!q) return [...docs];
+
+                const startsWithMatches = [];
+                const containsMatches = [];
+
+                docs.forEach((doc) => {
+                    const nameLower = (doc.name || '').toLowerCase();
+                    if (nameLower.startsWith(q)) {
+                        startsWithMatches.push(doc);
+                    } else if (nameLower.includes(q)) {
+                        containsMatches.push(doc);
+                    }
+                });
+
+                return [...startsWithMatches, ...containsMatches];
+            }
+
+            function renderPersonVault() {
+                const person = getActivePerson();
+                if (!person) return;
+                if (!Array.isArray(person.documents)) person.documents = [];
+
+                document.getElementById('vault-person-avatar').src = person.photo;
+                document.getElementById('vault-person-title').textContent = `${person.name}'s Vault`;
+                document.getElementById('vault-person-phone').textContent =
+                    `${person.phone.slice(0, 5)} ${person.phone.slice(5)}`;
+
+                const allDocs = person.documents;
+                const filteredDocs = filterAndSortDocuments(allDocs, appState.searchQuery);
+
+                // Update live match count badge
+                searchCountBadge.textContent = `Showing ${filteredDocs.length} of ${allDocs.length} ${allDocs.length === 1 ? 'document' : 'documents'}`;
+
+                // Handle empty states
+                if (allDocs.length === 0) {
+                    docsEmptyState.classList.remove('hidden');
+                    docsNoMatchState.classList.add('hidden');
+                    documentsGrid.innerHTML = '';
+                    return;
+                }
+
+                docsEmptyState.classList.add('hidden');
+
+                if (filteredDocs.length === 0) {
+                    docsNoMatchState.classList.remove('hidden');
+                    document.getElementById('no-match-text').textContent =
+                        `No documents found matching "${appState.searchQuery.trim()}".`;
+                    documentsGrid.innerHTML = '';
+                    return;
+                }
+
+                docsNoMatchState.classList.add('hidden');
+                documentsGrid.innerHTML = '';
+
+                filteredDocs.forEach((doc) => {
+                    const card = document.createElement('div');
+                    card.className = 'interactive-card rounded-3xl p-4 flex flex-col justify-between';
+
+                    card.innerHTML = `
+                        <div>
+                            <!-- Photo Thumbnail -->
+                            <div class="relative w-full h-44 rounded-2xl mb-3.5 overflow-hidden bg-slate-950/80 border border-white/12 group cursor-pointer" data-view-doc="${doc.id}">
+                                <img src="${doc.photo}" alt="${escapeHtml(doc.name)}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80"></div>
+                                <span class="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-sm text-[11px] font-medium text-cyan-200 border border-white/10">
+                                    Tap to View
+                                </span>
+                            </div>
+
+                            <!-- Title & Saved Date -->
+                            <div class="mb-3.5 px-0.5">
+                                <h3 class="text-base font-bold text-white leading-snug break-words">${escapeHtml(doc.name)}</h3>
+                                <p class="text-[11px] text-slate-400 mt-1">Saved on ${formatDate(doc.updatedAt || doc.createdAt)}</p>
+                            </div>
+                        </div>
+
+                        <!-- 4 Crisp Action Buttons: View, Share, Edit, Delete -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" data-view-doc="${doc.id}" class="py-2 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/30 text-xs font-semibold text-cyan-200 inline-flex items-center justify-center gap-1.5 transition-all active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <span>View</span>
+                            </button>
+
+                            <button type="button" data-share-doc="${doc.id}" class="py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/35 text-xs font-semibold text-emerald-200 inline-flex items-center justify-center gap-1.5 transition-all active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                </svg>
+                                <span>Share</span>
+                            </button>
+
+                            <button type="button" data-edit-doc="${doc.id}" class="py-2 px-3 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-400/30 text-xs font-semibold text-violet-200 inline-flex items-center justify-center gap-1.5 transition-all active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                <span>Edit</span>
+                            </button>
+
+                            <button type="button" data-delete-doc="${doc.id}" class="py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/30 text-xs font-semibold text-rose-200 inline-flex items-center justify-center gap-1.5 transition-all active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    `;
+                    documentsGrid.appendChild(card);
+                });
+            }
+
+            // Delegated click handler for Document Cards
+            documentsGrid.addEventListener('click', (e) => {
+                const person = getActivePerson();
+                if (!person) return;
+
+                const viewEl = e.target.closest('[data-view-doc]');
+                if (viewEl) {
+                    const doc = person.documents.find(d => d.id === viewEl.getAttribute('data-view-doc'));
+                    if (doc) openViewerModal(doc.name, doc.photo, person.name);
+                    return;
+                }
+
+                const shareEl = e.target.closest('[data-share-doc]');
+                if (shareEl) {
+                    const doc = person.documents.find(d => d.id === shareEl.getAttribute('data-share-doc'));
+                    if (doc) shareDocument(doc.name, doc.photo, person.name);
+                    return;
+                }
+
+                const editEl = e.target.closest('[data-edit-doc]');
+                if (editEl) {
+                    openDocModal(editEl.getAttribute('data-edit-doc'));
+                    return;
+                }
+
+                const deleteEl = e.target.closest('[data-delete-doc]');
+                if (deleteEl) {
+                    const docId = deleteEl.getAttribute('data-delete-doc');
+                    const doc = person.documents.find(d => d.id === docId);
+                    if (!doc) return;
+                    openConfirmModal(
+                        'Delete Document?',
+                        `Permanently delete "${doc.name}" from ${person.name}'s vault?`,
+                        async () => {
+                            person.documents = person.documents.filter(d => d.id !== docId);
+                            await dbSavePerson(person);
+                            renderPersonVault();
+                            showToast('Document deleted');
+                        }
+                    );
+                }
+            });
+
+            /* ---------------------------------------------------------
+               ADD / EDIT CUSTOM DOCUMENT MODAL LOGIC
+               --------------------------------------------------------- */
+            const docModal = document.getElementById('doc-modal');
+            const docModalTitle = document.getElementById('doc-modal-title');
+            const docNameInput = document.getElementById('doc-name-input');
+            const docModalPreviewImg = document.getElementById('doc-modal-preview-img');
+            const docModalPreviewPlaceholder = document.getElementById('doc-modal-preview-placeholder');
+            const docModalError = document.getElementById('doc-modal-error');
+            const btnSaveDocModal = document.getElementById('btn-save-doc-modal');
+
+            function applyDocModalPhoto(dataUrl) {
+                appState.docModalPhoto = dataUrl;
+                docModalPreviewImg.src = dataUrl;
+                docModalPreviewImg.classList.remove('hidden');
+                docModalPreviewPlaceholder.classList.add('hidden');
+                docModalError.classList.add('hidden');
+                showToast('Document photo ready!');
+            }
+
+            function openDocModal(editDocId = null) {
+                appState.editingDocId = editDocId;
+                docModalError.classList.add('hidden');
+
+                if (editDocId) {
+                    const person = getActivePerson();
+                    const doc = person && person.documents.find(d => d.id === editDocId);
+                    if (!doc) return;
+                    docModalTitle.textContent = 'Edit Document';
+                    btnSaveDocModal.textContent = 'Update Document';
+                    docNameInput.value = doc.name;
+                    appState.docModalPhoto = doc.photo;
+                    docModalPreviewImg.src = doc.photo;
+                    docModalPreviewImg.classList.remove('hidden');
+                    docModalPreviewPlaceholder.classList.add('hidden');
+                } else {
+                    docModalTitle.textContent = 'Add Document';
+                    btnSaveDocModal.textContent = 'Save Document';
+                    docNameInput.value = '';
+                    appState.docModalPhoto = '';
+                    docModalPreviewImg.src = '';
+                    docModalPreviewImg.classList.add('hidden');
+                    docModalPreviewPlaceholder.classList.remove('hidden');
+                }
+
+                docModal.classList.remove('hidden');
+                docModal.classList.add('flex');
+                setTimeout(() => docNameInput.focus(), 120);
+            }
+
+            function closeDocModal() {
+                docModal.classList.add('hidden');
+                docModal.classList.remove('flex');
+            }
+
+            document.getElementById('btn-open-add-doc').addEventListener('click', () => openDocModal(null));
+            document.getElementById('btn-empty-add-doc').addEventListener('click', () => openDocModal(null));
+            document.getElementById('close-doc-modal').addEventListener('click', closeDocModal);
+            docModal.addEventListener('click', (e) => {
+                if (e.target === docModal) closeDocModal();
+            });
+
+            // Quick-Fill Suggestion Chips
+            document.getElementById('doc-suggestion-chips').addEventListener('click', (e) => {
+                const chip = e.target.closest('[data-chip]');
+                if (!chip) return;
+                docNameInput.value = chip.getAttribute('data-chip');
+                docModalError.classList.add('hidden');
+                docNameInput.focus();
+            });
+
+            docNameInput.addEventListener('input', () => docModalError.classList.add('hidden'));
+
+            document.getElementById('btn-doc-modal-camera').addEventListener('click', () => {
+                openCameraModal({
+                    mode: 'doc',
+                    label: docNameInput.value.trim() || 'Document',
+                    maxDim: 1200,
+                    onCapture: applyDocModalPhoto
+                });
+            });
+
+            document.getElementById('doc-modal-gallery').addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                readAndCompressImage(file, 1200, applyDocModalPhoto);
+                e.target.value = '';
+            });
+
+            btnSaveDocModal.addEventListener('click', async () => {
+                const name = docNameInput.value.trim();
+                if (!name) {
+                    docModalError.textContent = 'Please enter a document name.';
+                    docModalError.classList.remove('hidden');
+                    docNameInput.focus();
+                    return;
+                }
+                if (!appState.docModalPhoto) {
+                    docModalError.textContent = 'Please attach a photo using Camera or Gallery.';
+                    docModalError.classList.remove('hidden');
+                    return;
+                }
+
+                const person = getActivePerson();
+                if (!person) return;
+                if (!Array.isArray(person.documents)) person.documents = [];
+
+                if (appState.editingDocId) {
+                    const existing = person.documents.find(d => d.id === appState.editingDocId);
+                    if (existing) {
+                        existing.name = name;
+                        existing.photo = appState.docModalPhoto;
+                        existing.updatedAt = Date.now();
+                    }
+                    await dbSavePerson(person);
+                    closeDocModal();
+                    renderPersonVault();
+                    showToast('Document updated!');
+                } else {
+                    person.documents.unshift({
+                        id: generateId('doc'),
+                        name,
+                        photo: appState.docModalPhoto,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    });
+                    await dbSavePerson(person);
+                    closeDocModal();
+                    renderPersonVault();
+                    showToast(`"${name}" saved permanently!`);
+                }
+            });
+
+            /* ---------------------------------------------------------
+               FULL-SCREEN ZOOMABLE VIEWER MODAL
+               --------------------------------------------------------- */
+            const viewerModal = document.getElementById('viewer-modal');
+            const viewerImg = document.getElementById('viewer-img');
+            const viewerTitle = document.getElementById('viewer-title');
+            const viewerZoomLabel = document.getElementById('viewer-zoom-label');
+
+            function buildSafeFileName(personName, docName) {
+                const clean = `CK_${personName}_${docName}`.replace(/[^a-zA-Z0-9_-]+/g, '_');
+                return `${clean}.jpg`;
+            }
+
+            function openViewerModal(docName, dataUrl, personName) {
+                appState.currentViewer = {
+                    title: docName,
+                    dataUrl,
+                    personName,
+                    fileName: buildSafeFileName(personName, docName)
+                };
+                viewerTitle.textContent = `${docName} — ${personName}`;
+                viewerImg.src = dataUrl;
+                viewerImg.classList.remove('zoomed');
+                viewerZoomLabel.textContent = 'Zoom In';
+                viewerModal.classList.remove('hidden');
+                viewerModal.classList.add('flex');
+            }
+
+            function closeViewerModal() {
+                viewerModal.classList.add('hidden');
+                viewerModal.classList.remove('flex');
+            }
+
+            document.getElementById('close-viewer-modal').addEventListener('click', closeViewerModal);
+            viewerModal.addEventListener('click', (e) => {
+                if (e.target === viewerModal) closeViewerModal();
+            });
+
+            function toggleViewerZoom() {
+                const isZoomed = viewerImg.classList.toggle('zoomed');
+                viewerZoomLabel.textContent = isZoomed ? 'Zoom Out' : 'Zoom In';
+            }
+            document.getElementById('btn-viewer-zoom').addEventListener('click', toggleViewerZoom);
+            viewerImg.addEventListener('click', toggleViewerZoom);
+
+            document.getElementById('btn-viewer-download').addEventListener('click', () => {
+                triggerImageDownload(appState.currentViewer.dataUrl, appState.currentViewer.fileName);
+            });
+            document.getElementById('btn-viewer-share').addEventListener('click', () => {
+                shareDocument(
+                    appState.currentViewer.title,
+                    appState.currentViewer.dataUrl,
+                    appState.currentViewer.personName
+                );
+            });
+
+            /* ---------------------------------------------------------
+               SHARE SYSTEM (Native File Share + In-App Fallback)
+               --------------------------------------------------------- */
+            const shareModal = document.getElementById('share-modal');
+
+            function dataUrlToBlob(dataUrl) {
+                const parts = dataUrl.split(',');
+                const mime = parts[0].match(/:(.*?);/)[1] || 'image/jpeg';
+                const byteString = atob(parts[1]);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                return new Blob([ab], { type: mime });
+            }
+
+            function triggerImageDownload(dataUrl, fileName) {
+                try {
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = fileName || 'CK_document.jpg';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showToast('Image downloaded!');
+                } catch (err) {
+                    showToast('Download failed on this browser', true);
+                }
+            }
+
+            async function shareDocument(docName, dataUrl, personName) {
+                const fileName = buildSafeFileName(personName, docName);
+                appState.currentShare = { title: docName, dataUrl, fileName, personName };
+
+                if (navigator.share) {
+                    try {
+                        const blob = dataUrlToBlob(dataUrl);
+                        const file = new File([blob], fileName, { type: blob.type });
+                        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                title: `${personName} — ${docName}`,
+                                text: `Sharing ${docName} (${personName}) from CK Vault`,
+                                files: [file]
+                            });
+                            showToast('Shared successfully!');
+                            return;
+                        }
+                    } catch (err) {
+                        if (err && err.name === 'AbortError') return;
+                    }
+                }
+
+                openShareModal();
+            }
+
+            function openShareModal() {
+                document.getElementById('share-modal-img').src = appState.currentShare.dataUrl;
+                document.getElementById('share-modal-docname').textContent =
+                    `${appState.currentShare.title} (${appState.currentShare.personName})`;
+                shareModal.classList.remove('hidden');
+                shareModal.classList.add('flex');
+            }
+
+            function closeShareModal() {
+                shareModal.classList.add('hidden');
+                shareModal.classList.remove('flex');
+            }
+
+            document.getElementById('close-share-modal').addEventListener('click', closeShareModal);
+            shareModal.addEventListener('click', (e) => {
+                if (e.target === shareModal) closeShareModal();
+            });
+
+            document.getElementById('btn-share-download').addEventListener('click', () => {
+                triggerImageDownload(appState.currentShare.dataUrl, appState.currentShare.fileName);
+            });
+
+            document.getElementById('btn-share-copy').addEventListener('click', () => {
+                try {
+                    const img = new Image();
+                    img.onload = () => {
+                        try {
+                            const c = document.createElement('canvas');
+                            c.width = img.width;
+                            c.height = img.height;
+                            c.getContext('2d').drawImage(img, 0, 0);
+                            c.toBlob(async (pngBlob) => {
+                                if (navigator.clipboard && window.ClipboardItem && pngBlob) {
+                                    try {
+                                        await navigator.clipboard.write([
+                                            new ClipboardItem({ 'image/png': pngBlob })
+                                        ]);
+                                        showToast('Image copied to clipboard!');
+                                        return;
+                                    } catch (e) {
+                                        fallbackCopyText(`${appState.currentShare.personName} - ${appState.currentShare.title}`);
+                                    }
+                                } else {
+                                    fallbackCopyText(`${appState.currentShare.personName} - ${appState.currentShare.title}`);
+                                }
+                            }, 'image/png');
+                        } catch (e) {
+                            fallbackCopyText(`${appState.currentShare.personName} - ${appState.currentShare.title}`);
+                        }
+                    };
+                    img.src = appState.currentShare.dataUrl;
+                } catch (err) {
+                    fallbackCopyText(`${appState.currentShare.personName} - ${appState.currentShare.title}`);
+                }
+            });
+
+            function fallbackCopyText(text) {
+                try {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showToast('Details copied! Use Download for image.');
+                } catch (e) {
+                    showToast('Use Download Image to save & share.', true);
+                }
+            }
+
+            document.getElementById('btn-share-whatsapp').addEventListener('click', () => {
+                triggerImageDownload(appState.currentShare.dataUrl, appState.currentShare.fileName);
+                const msg = encodeURIComponent(
+                    `Sharing ${appState.currentShare.title} for ${appState.currentShare.personName} (from CK Vault).`
+                );
+                window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
+            });
+
+            /* ---------------------------------------------------------
+               BOOTSTRAP CK APP ON WINDOW LOAD
+               --------------------------------------------------------- */
+            window.onload = async function () {
+                await openDatabase();
+                appState.people = await dbGetAllPeople();
+                renderPeopleHub();
+                startCinematicSplash();
+            };
+        })();
+    </script>
+
+</body></html>
